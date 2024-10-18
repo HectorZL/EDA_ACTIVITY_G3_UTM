@@ -1,0 +1,26 @@
+{
+    "id": "AA16FEC0",
+    "path": "~/Proyects_R/Actividad_02_Prediccion_Ventas_G3/scripts/etapas_1_2_3.R",
+    "project_path": "scripts/etapas_1_2_3.R",
+    "type": "r_source",
+    "hash": "2466673611",
+    "contents": "",
+    "dirty": false,
+    "created": 1729281938341.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "10,21",
+        "scrollLine": "4"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1729282250,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1729282250797,
+    "read_only": false,
+    "read_only_alternatives": []
+}

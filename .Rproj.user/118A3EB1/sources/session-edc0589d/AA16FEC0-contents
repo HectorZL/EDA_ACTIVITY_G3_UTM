@@ -1,0 +1,223 @@
+#                 Practica-2
+#_______
+#           Integrantes
+#             Grupo #3
+#
+#• LOOR PAZMIÑO JANDRY JOSUE 
+#• PALMA LAZ ARIEL LEONARDO
+#• QUIMI RAMIREZ IVAN JOSUE 
+#• ZAMBRANO LOOR HECTOR JESUS 
+#
+#            Carrera:
+#
+#     Sistemas de Informacion
+#_______
+# Crear un script R con las siguientes características:
+#_______
+#_______
+
+
+
+
+#Instalar la libreria.
+if (!require(tidyverse)) install.packages("tidyverse")
+library(dplyr)
+
+# Config -------------------------------------------------------------
+# Para notación no numérica.
+options(scipen=999) 
+# Para reproducibilidad.
+set.seed(2024) 
+
+
+#________Actividad__________
+#Seleccion:
+#___________________
+#Primero se cargan los datos dados por la empresa.
+ventas_ecuador <- read.csv("Datos/ventas_ecuador.csv") #Se usa la funcion read, y con el formato que se quiere leer (csv)
+
+#Se muestra una vista previa de los datos con la funcion glimpse()
+glimpse(ventas_ecuador)
+
+
+#___________________
+#Limpiesa:
+#                     Eliminación de observaciones duplicadas
+#___________________
+
+# Verificamos si hay duplicados, a traves de la comparacion de todas las listas
+ventas_repetidas <- ventas_ecuador |> 
+  group_by_all() |> 
+  filter(n() > 1) |> 
+  ungroup()
+
+# Vemos las repetidas
+glimpse(ventas_repetidas)
+
+#Se eliminan duplicados con el distinct()
+ventas_ecuador_limpio <- ventas_ecuador |> distinct()
+
+#Con la funcion cat, se mostrara en pantalla el numero de filas originales
+cat("Filas originales:", nrow(ventas_ecuador),"\n")
+
+#Con la funcion cat, se mostrara en pantalla el numero de filas repetidas
+cat("Filas con repetidos:", nrow(ventas_repetidas), "\n")
+
+#Con la funcion cat, se mostrara en pantalla el numero de filas eliminadas
+cat("Filas después de eliminar duplicados:", nrow(ventas_ecuador_limpio), "\n")
+
+#___________________
+#                             Valores Faltantes
+#___________________
+
+# Verificamos los NA, variables que no tienen datos.
+# Usamos el pipe native, concatenar la funcion y pasar como argumento a la funcion summarise_all().
+# la funcion summarise_all(), se usa para aplicar la siguiente funcion a toda la columna.
+# ~, es para crear una funcion lambda
+valores_faltantes <- ventas_ecuador_limpio |> summarise_all(~sum(is.na(.)))
+
+# Mostramos los Na en cada variable
+glimpse(valores_faltantes)
+
+#Se realiza esta funcion para correguir los NA.
+ventas_ecuador_limpio <- ventas_ecuador_limpio |>
+  mutate(
+    # Reemplazamos los NA en 'edad_cliente' con la mediana de la columna
+    # usamos el na.rm = TRUE, Para remover los NA antes de hacer cualquier calculo, sino saldra NA.
+    edad_cliente = ifelse(
+      #Condicion del ifelse
+      is.na(edad_cliente), 
+      #Si es verdadero se hace esto
+      median(edad_cliente, na.rm = TRUE), 
+      #Si es falso, se realiza esto (NO Hace nada)
+      edad_cliente)
+  )
+
+#Verificamos como afecta el NA, si no se pone el na.rm = TRUE,  (Sale NA)
+hola <- ventas_ecuador_limpio |> 
+  pull(edad_cliente) |> 
+  mean()
+glimpse(hola)
+
+# Verificamos nuevamente si quedan NA en 'edad_cliente'
+valores_faltantes <- ventas_ecuador_limpio |>
+  summarise(edad_cliente = sum(is.na(edad_cliente)))
+
+glimpse(valores_faltantes)
+
+#___________________
+#                         ERRORES ESTRUCTURALES
+#___________________
+
+# Convertimos todos los nombre a formato titulo con str_to_title
+ventas_ecuador_limpio <- ventas_ecuador_limpio |>
+  mutate(ciudad = str_to_title(ciudad))
+# Verificamos
+ventas_ecuador_limpio |> 
+  count(ciudad)
+
+
+
+# Verificamos las formas de escritura de cada ciudad
+ventas_ecuador_limpio |> 
+  count(ciudad)
+# Filtrar para eliminar fechas superiores al año 2024
+ventas_ecuador_limpio <- ventas_ecuador_limpio |>
+  filter(year(fecha) <= 2024)
+
+# Imprimir el resultado
+
+# Obtener el rango actual de fechas en el dataset
+rango_fechas <- ventas_ecuador_limpio |>
+  summarise(
+    fecha_min = min(fecha),
+    fecha_max = max(fecha)
+  )
+#Imprimir el rango de las dfechas
+print(rango_fechas)
+
+#___________________
+#Enriquesimiento de datos:
+#                             Enriquecimiento geográfico
+#___________________
+
+
+#Ahora vamos a agregar nuevas columnas, para eso haremos un enriquecimiento de datos.
+#En este caso se agregara la region en la que se encuentra cada ciudad.
+
+ventas_ecuador_enriquecido <- ventas_ecuador_limpio %>% 
+  #Hay que recordar que mutate se usa para modificar una columna o agregar otra
+  mutate(
+    region = case_when( #El case_when, es una funcion que crea una columna con valores basado en condicinoes logicas, es similar al if-else
+      #Se usara el %in%, el cual sirve para verificar si un elemento se encuentra en un vector o dataframe
+      # su sintaxis es: elemento %in% vector
+      # Ejemplo: 5 %in% c(1, 2, 3, 4, 5) se dice, si el 5 se encuentra en ese vector. como un filtro.
+      ciudad %in% c("Quito") ~ "Sierra",
+      ciudad %in% c("Guayaquil", "Manta", "Portoviejo") ~ "Costa",
+      ciudad == "Cuenca" ~ "Austro",
+      TRUE ~ "Otra"
+    )
+  )
+glimpse(ventas_ecuador_enriquecido)
+
+#___________________
+#                             Enriquecimiento demografico
+#___________________
+
+ventas_ecuador_enriquecido <- ventas_ecuador_enriquecido |>
+  mutate(
+    #La funcion cut(), sirve para categorizar valores de la columna edad_grupo
+    edad_grupo = cut(edad_cliente, 
+                     #el breaks, define los distintos cortes o rango para cada categoria
+                     breaks = c(0, 25, 40, 60, Inf),
+                     #el labels son las etiqueta que tendra cada rango del breaks
+                     labels = c("Joven", "Adulto joven", "Adulto", "Adulto mayor"),
+                     #el right sirve para tomar el rango del intervalo derecho, si se coge el 25 o no.
+                     right = FALSE)
+  )
+glimpse(ventas_ecuador_enriquecido)
+
+#___________________
+#                            Enriquecimiento de productos
+#___________________
+#Añadiremos una categorización de productos:
+ventas_ecuador_enriquecido <- ventas_ecuador_enriquecido |>
+  mutate(
+    categoria_producto = case_when(
+      producto %in% c("Arroz", "Atún", "Leche", "Pan") ~ "Alimentos básicos",
+      producto %in% c("Frutas", "Verduras") ~ "Productos frescos",
+      producto %in% c("Carne", "Pollo") ~ "Proteínas",
+      TRUE ~ "Otro"
+    )
+  )
+glimpse(ventas_ecuador_enriquecido)
+
+
+#___________________
+#Transformacion:
+#                       Discretización de atributos
+#___________________
+
+# Discretizaremos la variable 'ventas' en categorías.
+ventas_ecuador_transformado <- ventas_ecuador_enriquecido |>
+  mutate(
+    ventas_categoria = case_when(
+      ventas < 150 ~ "Bajo",
+      ventas >= 150 & ventas < 300 ~ "Medio",
+      ventas >= 300 ~ "Alto"
+    )
+  )
+
+glimpse(ventas_ecuador_transformado)
+
+
+#___________________
+#                       Numerización de atributos categóricos
+#___________________
+
+# Convertiremos algunas variables categóricas en numéricas:
+ventas_ecuador_transformado <- ventas_ecuador_transformado |>
+  mutate(
+    ciudad_numerica = as.numeric(factor(ciudad)), 
+    promocion_numerica = as.numeric(promocion)
+  )
