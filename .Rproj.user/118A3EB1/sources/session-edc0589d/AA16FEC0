@@ -3,7 +3,7 @@
     "path": "~/Proyects_R/Actividad_02_Prediccion_Ventas_G3/scripts/etapas_1_2_3.R",
     "project_path": "scripts/etapas_1_2_3.R",
     "type": "r_source",
-    "hash": "2466673611",
+    "hash": "0",
     "contents": "",
     "dirty": false,
     "created": 1729281938341.0,
@@ -12,15 +12,15 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "10,21",
-        "scrollLine": "4"
+        "cursorPosition": "260,0",
+        "scrollLine": "260"
     },
     "folds": "",
-    "lastKnownWriteTime": 1729282250,
+    "lastKnownWriteTime": 1729290152,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1729282250797,
+    "last_content_update": 1729290152447,
     "read_only": false,
     "read_only_alternatives": []
 }

@@ -41,7 +41,7 @@ glimpse(ventas_ecuador)
 
 
 #___________________
-#Limpiesa:
+#Limpieza:
 #                     Eliminación de observaciones duplicadas
 #___________________
 
@@ -126,6 +126,7 @@ ventas_ecuador_limpio <- ventas_ecuador_limpio |>
   filter(year(fecha) <= 2024)
 
 # Imprimir el resultado
+print(ventas_ecuador_limpio)
 
 # Obtener el rango actual de fechas en el dataset
 rango_fechas <- ventas_ecuador_limpio |>
@@ -191,6 +192,86 @@ ventas_ecuador_enriquecido <- ventas_ecuador_enriquecido |>
     )
   )
 glimpse(ventas_ecuador_enriquecido)
+
+
+
+
+#___________________
+# 2.3 ANALISIS EXPLORATIO DE DATOS(EDA)
+#                       
+#___________________
+
+# Asegurémonos de que estamos trabajando con el conjunto de datos de calidad
+ventas_ecuador_enriquecido <- ventas_ecuador_enriquecido |>
+  mutate(fecha = as.Date(fecha))  # Asegurarse de que fecha es de tipo Date
+glimpse(ventas_ecuador_enriquecido)
+
+
+
+#
+
+# Resumen estadístico de la tasa de devolución
+tasa_devolucion_resumen <- ventas_ecuador_enriquecido |>
+  summarise(
+    conteo = n(),
+    media = mean(tasa_devolucion, na.rm = TRUE),
+    mediana = median(tasa_devolucion, na.rm = TRUE),
+    desviacion_estandar = sd(tasa_devolucion, na.rm = TRUE),
+    min = min(tasa_devolucion, na.rm = TRUE),
+    max = max(tasa_devolucion, na.rm = TRUE),
+    q1 = quantile(tasa_devolucion, 0.25, na.rm = TRUE),
+    q3 = quantile(tasa_devolucion, 0.75, na.rm = TRUE)
+  )
+
+print(tasa_devolucion_resumen)
+
+
+# Histograma de la tasa de devolución
+ggplot(ventas_ecuador_enriquecido, aes(x = tasa_devolucion)) +
+  geom_histogram(bins = 10, fill = "pink", color = "black") +
+  labs(title = "Distribución de la tasa de devolución",
+       x = "Tasa de devolución", y = "Frecuencia")
+
+
+# EDA REGION (CUALITATIVA)
+
+
+#Análisis EDA de la región de manera cualitativa por región basándose en el código proporcionado:
+#Frecuencia de ventas por región:
+  
+ventas_ecuador_enriquecido |>
+  count(region)
+
+#Visualización de ventas por región mediante un diagrama de barras:
+ggplot(ventas_ecuador_enriquecido, aes(x = region, y = ventas)) +
+  geom_bar(stat = "identity", fill = "lightblue") +
+  labs(title = "Distribución de ventas (cantidad) por región",
+       x = "Región", y = "Ventas (cantidad)")
+
+ventas_ecuador_enriquecido |>
+  group_by(region) |>
+  summarise(total_ventas = sum(ventas)) |>
+  ggplot(aes(x = reorder(region, -total_ventas), y = total_ventas)) +
+  geom_bar(stat = "identity", fill = "coral") +
+  labs(title = "Ventas totales ($) por región",
+       x = "Región", y = "Ventas totales ($)")
+
+
+
+# EDAD GRUPO()
+
+
+
+ventas_ecuador_enriquecido %>%
+  count(edad_grupo)
+
+
+
+ggplot(ventas_ecuador_enriquecido, aes(x = edad_grupo)) +
+  geom_bar(stat = "count", fill = "lightgreen") +
+  labs(title = "Distribución de ventas (cantidad) por grupo de edad",
+       x = "Grupo de edad", y = "Ventas (cantidad)") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 
 #___________________
