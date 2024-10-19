@@ -208,7 +208,7 @@ glimpse(ventas_ecuador_enriquecido)
 
 
 
-#
+#TASA DEVOLUCION
 
 # Resumen estadístico de la tasa de devolución
 tasa_devolucion_resumen <- ventas_ecuador_enriquecido |>
@@ -265,14 +265,32 @@ ventas_ecuador_enriquecido |>
 ventas_ecuador_enriquecido %>%
   count(edad_grupo)
 
+print(ventas_ecuador_enriquecido)
 
-
-ggplot(ventas_ecuador_enriquecido, aes(x = edad_grupo)) +
-  geom_bar(stat = "count", fill = "lightgreen") +
+ggplot(ventas_ecuador_enriquecido, aes(x = edad_grupo, y = ventas)) +
+  geom_boxplot(fill = "lightgreen") +
   labs(title = "Distribución de ventas (cantidad) por grupo de edad",
        x = "Grupo de edad", y = "Ventas (cantidad)") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
+#EDAD RANGO
+
+
+# Crear rangos de edad
+ventas_ecuador_enriquecido$edad_rango <- cut(ventas_ecuador_enriquecido$edad_cliente, breaks = seq(0, 100, by = 10), right = FALSE)
+
+# Gráfico de cajas por rango de edad
+ggplot(ventas_ecuador_enriquecido, aes(x = edad_rango, y = tasa_devolucion, fill = edad_rango)) +
+  geom_boxplot() +
+  labs(title = "Distribución de la tasa de devolución por rango de edad del cliente",
+       x = "Rango de Edad", y = "Tasa de Devolución") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme_minimal() +
+  guides(color = guide_legend(title = "Rango de Edad")) +
+  theme(legend.position = "bottom")
+
+
+glimpse(ventas_ecuador_enriquecido)
 
 #___________________
 #Transformacion:
@@ -289,7 +307,78 @@ ventas_ecuador_transformado <- ventas_ecuador_enriquecido |>
     )
   )
 
+#glimpse(ventas_ecuador_transformado)
+
+# Categoria ventas
+
+
+# CIUDAD NUMERICA Y PROMOCION NUMERICA
+
+# Convertiremos algunas variables categóricas en numéricas:
+ventas_ecuador_transformado <- ventas_ecuador_transformado |>
+  mutate(
+    ciudad_numerica = as.numeric(factor(ciudad)), 
+    promocion_numerica = as.numeric(promocion)
+  )
+
+# Verificamos el resultado
 glimpse(ventas_ecuador_transformado)
+
+# VENTAS NORMALIZADAS ,UNIDADES NUMERICAS NORMALIZADAS
+
+### Normalización de atributos numéricos
+ventas_ecuador_transformado <- ventas_ecuador_transformado |>
+  mutate(
+    ventas_normalizadas = as.vector(scale(ventas)),
+    unidades_vendidas_normalizadas = as.vector(scale(unidades_vendidas))
+  )
+
+# Verificamos el resultado
+glimpse(ventas_ecuador_transformado)
+
+
+
+#VENTAS POR MES (CUANTITATIVO)
+
+# Resumen básico
+summary(ventas_ecuador_enriquecido$fecha)
+# Visualización de la distribución temporal
+ggplot(ventas_ecuador_enriquecido, aes(x = fecha)) +
+  geom_histogram(binwidth = 7, fill = "skyblue", color = "black") +
+  labs(title = "Distribución de Ventas a lo largo del tiempo",
+       x = "Fecha", y = "Número de Ventas")
+
+# Ventas por mes
+ventas_ecuador_enriquecido |>
+  mutate(mes = floor_date(fecha, "month")) |>
+  group_by(mes) |>
+  summarise(total_ventas = sum(ventas)) |>
+  ggplot(aes(x = mes, y = total_ventas)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Ventas Totales por Mes",
+       x = "Mes", y = "Ventas totales")
+
+#dia semana_finsemana
+
+ventas_ecuador_transformado <- ventas_ecuador_transformado |>
+  mutate(
+    mes = month(fecha),
+    dia_semana = wday(fecha),
+    es_fin_semana = ifelse(dia_semana %in% c(1, 7), 1, 0),
+    ventas_por_unidad = ventas / unidades_vendidas
+  )
+glimpse(ventas_ecuador_transformado)
+
+
+
+#################
+
+
+ggplot(ventas_ecuador_transformado, aes(x = es_fin_semana, y = ventas, group = es_fin_semana)) +
+  geom_boxplot(fill = "lightblue") +
+  labs(title = "Distribución de ventas los fines de semana",
+       x = "Fin de semana (1 = sí, 0 = no)", y = "Ventas")
 
 
 #___________________
